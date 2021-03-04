@@ -8,7 +8,6 @@ library(tidyverse)
 library(lubridate)
 library(chron)
 library(here)
-library(arrow)
 
 
 # LOAD RAW DATA -----------------------------------------------------------
@@ -59,6 +58,9 @@ df_fire <- df_fire %>%
 df_fire <- df_fire %>%
   arrange(datetime)
 
+# Remove last date (i.e. likely incomplete data)
+df_fire <- df_fire %>%
+  filter(date != max(date))
 
 # DEFINE INCIDENT-LEVEL FEATURES --------------------------------------------
 
@@ -93,9 +95,9 @@ df_fire_agg_hour <- df_fire %>%
 # MERGE COMPLETE SERIES ---------------------------------------------------
 
 # Validate complete time series (i.e. no missing dates)
-df_fire_agg <- 
+df_fire_agg <-
   df_fire_agg_total %>%
-  complete(date = full_seq(date, period = 1), fill = list(volume_total = 0)) 
+  complete(date = full_seq(date, period = 1), fill = list(volume_total = 0))
 
 # Join time-based aggregated features
 df_fire_agg <- df_fire_agg %>%
@@ -118,4 +120,4 @@ df_fire_agg <- df_fire_agg %>%
 
 # WRITE TO DISK -----------------------------------------------------------
 
-write_parquet(df_fire_agg, here("data", "processed", "df_fire_agg.parquet"))
+write_rds(df_fire_agg, here("data", "processed", "df_fire_agg.rds"))

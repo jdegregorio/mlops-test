@@ -1,0 +1,25 @@
+stages:
+
+  # Prepare data for analysis
+  prepare_data:
+    cmd: Rscript code/02_prepare_data.R
+    deps:
+    - code/02_prepare_data.R
+    - data/raw/data_seattle_fire_911.csv
+    outs:
+    - data/processed/df_fire_agg.rds
+
+  # Build and evaluate a model
+  model:
+    cmd: Rscript code/03_model.R
+    deps:
+      - code/03_model.R
+      - data/processed/df_fire_agg.rds
+    outs:
+      - data/metrics/df_eval.rds
+      - data/metrics/df_eval_sum.rds
+      - data/metrics/plot_mape_lead.jpg
+      - data/metrics/plot_mape_year.jpg
+      - data/model/model.rds
+    metrics:
+      - data/metrics/metrics.yaml

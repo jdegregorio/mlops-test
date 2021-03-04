@@ -1,0 +1,36 @@
+name: run_experiment
+on: push
+jobs:
+  run:
+    runs-on: [ubuntu-20.04]
+    container: docker://dvcorg/cml:latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Setup R
+        uses: r-lib/actions/setup-r@master
+        with:
+          r-version: '3.6.1'
+            
+      - name: Setup dependencies
+        run: |
+          sudo apt-get install libcurl4-openssl-dev
+          sudo apt-get install libssl-dev
+          sudo apt-get install libxml2-dev
+          R -e 'install.packages("renv")' 
+          R -e 'renv::restore()'
+          
+      - name: Run experiment
+        env: 
+          repo_token: ${{ secrets.GITHUB_TOKEN }} 
+        run: |
+          # Run experiment
+          dvc repro
+          # Add plots
+          echo "## MAPE Plots" >> report.md
+          cml-publish data/metrics/plot_mape_lead.jpg --md > report.md 
+          cml-publish data/metrics/plot_mape_year.jpg --md > report.md 
+          #echo "## Error Summary" >> report.md
+          #cml-publish data/metrics/df_eval_sum.html --md > report.md 
+          # Send report
+          cml-send-comment report.md
